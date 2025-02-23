@@ -158,7 +158,7 @@ void show_messages(uint8_t modulus)
 
   // debug();
   if (!is_connected) {
-    err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+    err = network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
     handle_err("open");
     is_connected = true;
   }

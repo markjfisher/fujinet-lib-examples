@@ -165,7 +165,7 @@ void setup() {
 
 void open_and_parse_json(char *u) {
     url = u;
-    err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+    err = network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
     handle_err("open");
 
     err = network_json_parse(url);
@@ -174,7 +174,7 @@ void open_and_parse_json(char *u) {
 
 void open(char *u) {
     url = u;
-    err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+    err = network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
     handle_err("open");
 }
 

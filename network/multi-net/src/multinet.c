@@ -45,15 +45,15 @@ int main(void) {
 
     // hit the endpoints hard so we can test memory
     for (i = 0; i < 20; i++) {
-        err = network_open(u1, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u1");
-        err = network_open(u2, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u2");
-        err = network_open(u3, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u3");
-        // err = network_open(u4, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u4");
-        // err = network_open(u5, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u5");
+        err = network_open(u1, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u1");
+        err = network_open(u2, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u2");
+        err = network_open(u3, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u3");
+        // err = network_open(u4, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u4");
+        // err = network_open(u5, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u5");
         // FN runs out of memory on about 6, and 5 is stable.
-        // err = network_open(u6, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u6");
-        // err = network_open(u7, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u7");
-        // err = network_open(u8, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE); handle_err("open u8");
+        // err = network_open(u6, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u6");
+        // err = network_open(u7, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u7");
+        // err = network_open(u8, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE); handle_err("open u8");
 
         // 
         get(u1); printf("%s", result);
@@ -113,7 +113,7 @@ void setup() {
 }
 
 void open(char *u) {
-    err = network_open(u, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+    err = network_open(u, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
     handle_err("open");
 }
 

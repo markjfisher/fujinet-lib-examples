@@ -89,7 +89,7 @@ void setup() {
 
 void start_get() {
     url = create_url("get");
-    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type_text);
+    err = network_open(url, OPEN_MODE_HTTP_GET_H, trans_type_text);
     handle_err("open");
 
     err = network_json_parse(url);
@@ -186,7 +186,7 @@ void test_simple_get() {
     int n = 0;
     url = create_url("get");
     // trans mode doesn't appear to be working, always coming back 0x9b on atari
-    err = network_open(url, OPEN_MODE_HTTP_GET, trans_type_text);
+    err = network_open(url, OPEN_MODE_HTTP_GET_H, trans_type_text);
     handle_err("open");
 
     // simply read without any fancy modes. FN resets the modes to normal body after closing a connection, so we don't even have to specify the BODY mode.

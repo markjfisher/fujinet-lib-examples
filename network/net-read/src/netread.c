@@ -131,7 +131,7 @@ void do_read(int num) {
 
 void do_open() {
   printf("Url: %s\n", url);
-  err = network_open(url, OPEN_MODE_HTTP_GET, OPEN_TRANS_NONE);
+  err = network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
   handle_err("open");
 }
 
