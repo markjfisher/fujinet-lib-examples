@@ -18,6 +18,8 @@
 */
 
 char *httpbin = "n:https://httpbin.org/";
+char *array_data = "{\"choices\":[{\"index\":0,\"message\":{\"role\":\"toughguy\",\"function_call\":{\"name\":\"response\",\"arguments\":\"args here\"}}}]}";
+char *array_simple = "{\"ns\":[1,2,3],\"ss\":[\"a\",\"b\",\"c\"]}";
 char url_buffer[128];
 char result[1024];
 uint8_t err = 0;
@@ -44,6 +46,8 @@ int main(void) {
     printf("Base URL: %s\n", httpbin);
 
     setup();
+    test_array_simple();
+    test_array_object();
 
     start_get();                        // save us having to keep closing/reopening.
     test_get_query("");                 // returns entire json *object* line by line. forces you to know structure if you use this (looking at you lobby)
@@ -181,6 +185,63 @@ void test_delete() {
 }
 
 // -------------------------------------------------------------------------------
+// POST JSON with 2 simple arrays, get element of it back
+void test_array_simple() {
+    int n = 0;
+    int i = 0;
+    char path[20];
+    url = create_url("anything");
+    err = network_open(url, OPEN_MODE_HTTP_POST, trans_type_text);
+    handle_err("post:open");
+
+    set_json(url);
+    network_http_post(url, array_simple);
+    err = network_json_parse(url);
+    handle_err("post:json parse");
+    printf("simple array test -----\n");
+    // we go past the end of the array to show it returns empty string
+    for (i = 0; i < 4; i++) {
+        sprintf(path, "/json/ns/%d", i);
+        n = network_json_query(url, path, result);
+        printf("/array-simple:  ns[%d]=>%s<\n", i, result);
+    }
+
+    for (i = 0; i < 4; i++) {
+        sprintf(path, "/json/ss/%d", i);
+        n = network_json_query(url, path, result);
+        printf("/array-simple:  ss[%d]=>%s<\n", i, result);
+    }
+
+    err = network_close(url);
+    handle_err("post:close");
+}
+
+// -------------------------------------------------------------------------------
+// POST JSON with an array, get element of it back
+void test_array_object() {
+    int n = 0;
+    url = create_url("anything");
+    err = network_open(url, OPEN_MODE_HTTP_POST, trans_type_text);
+    handle_err("post:open");
+
+    set_json(url);
+    network_http_post(url, array_data);
+    err = network_json_parse(url);
+    handle_err("post:json parse");
+    n = network_json_query(url, "/json/choices/0/message/function_call/arguments", result);
+    if (n < 0) {
+        err = -n;
+        handle_err("post:json array query");
+    }
+
+    printf("object array test -----\n");
+    printf("/array-obj:  args=>%s<\n", result);
+    err = network_close(url);
+    handle_err("post:close");
+}
+
+
+// -------------------------------------------------------------------------------
 // GET - no data to send, but response will have data in it
 void test_simple_get() {
     int n = 0;
@@ -228,7 +289,7 @@ void test_redir_headers() {
 
     // now perform the request, just get the header 4 bytes, should be hex 0x89, 0x50, 0x4E, 0x47, which is 0x89 followed by "PNG"
     printf("\nFile first 4 bytes:\n");
-    debug();
+    // debug();
     n = network_read(url, (uint8_t *) result, 4);
     hex_dump(result, 4);
 

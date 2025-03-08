@@ -19,6 +19,8 @@ void test_get_query(char *path);
 void test_delete();
 void test_post();
 void test_put();
+void test_array_simple();
+void test_array_object();
 void test_simple_get();
 void test_redir_headers();
 void hex_dump(char* data, int size);
