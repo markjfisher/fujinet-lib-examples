@@ -12,14 +12,11 @@
 void get_line(char* buf, uint8_t max_len) {
 	uint8_t c;
 	uint16_t i = 0;
-	uint8_t init_x = wherex();
 
 	cursor(1);
 
 	--max_len;
 	do {
-		gotox(init_x + i);
-
 		c = cgetc();
 
 		if (isprint(c)) {
