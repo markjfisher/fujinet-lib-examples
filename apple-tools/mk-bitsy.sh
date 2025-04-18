@@ -21,9 +21,20 @@ if [ -f "$DISKNAME" ] ; then
   rm "$DISKNAME"
 fi
 
-SRC_PRODOS="$SCRIPT_DIR/ProDOS_2_4_2.dsk"
+# APPLE_CACHE_DIR is set in get-binaries.sh
+SRC_PRODOS="$APPLE_CACHE_DIR/ProDOS_2_4_2.dsk"
 
 export ACX_DISK_NAME="$DISKNAME"
+
+# echo '....................................'
+# echo "SCRIPT_DIR=$SCRIPT_DIR"
+# echo "ACX_DISK_NAME=$ACX_DISK_NAME"
+# echo "ACX=${ACX}"
+# echo "VOLUMENAME=${VOLUMENAME}"
+# echo "DISKNAME=${DISKNAME}"
+# echo "SRC_PRODOS=${SRC_PRODOS}"
+# echo '....................................'
+
 
 ${ACX} create --prodos -f "$SRC_PRODOS"
 ${ACX} rm -f BASIC.SYSTEM

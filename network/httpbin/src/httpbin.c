@@ -124,7 +124,7 @@ void test_post() {
     err = network_open(url, OPEN_MODE_HTTP_POST, trans_type_text);
     handle_err("post:open");
 
-    set_json(url);
+    add_json_headers(url);
     network_http_post(url, "{\"name\":\"fenrock\"}");
     err = network_json_parse(url);
     handle_err("post:json parse");
@@ -147,7 +147,7 @@ void test_put() {
     err = network_open(url, OPEN_MODE_HTTP_PUT_H, trans_type_text);
     handle_err("put:open");
 
-    set_json(url);
+    add_json_headers(url);
     network_http_put(url, "{\"level\":11}");
     err = network_json_parse(url);
     handle_err("put:json parse");
@@ -171,7 +171,7 @@ void test_delete() {
     err = network_http_delete(url, trans_type_text);
     handle_err("del:open");
 
-    set_json(url);
+    add_json_headers(url);
     err = network_json_parse(url);
     handle_err("del:json parse");
     n = network_json_query(url, "/headers/host", result);
@@ -194,7 +194,7 @@ void test_array_simple() {
     err = network_open(url, OPEN_MODE_HTTP_POST, trans_type_text);
     handle_err("post:open");
 
-    set_json(url);
+    add_json_headers(url);
     network_http_post(url, array_simple);
     err = network_json_parse(url);
     handle_err("post:json parse");
@@ -224,7 +224,7 @@ void test_array_object() {
     err = network_open(url, OPEN_MODE_HTTP_POST, trans_type_text);
     handle_err("post:open");
 
-    set_json(url);
+    add_json_headers(url);
     network_http_post(url, array_data);
     err = network_json_parse(url);
     handle_err("post:json parse");
@@ -336,7 +336,7 @@ char *create_url(char *method) {
     return (char *) url_buffer;
 }
 
-void set_json(char *devicespec) {
+void add_json_headers(char *devicespec) {
     network_http_start_add_headers(devicespec);
     network_http_add_header(devicespec, "Accept: application/json");
     network_http_add_header(devicespec, "Content-Type: application/json");

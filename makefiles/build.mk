@@ -14,6 +14,7 @@ SRCDIR := src
 BUILD_DIR := build
 OBJDIR := obj
 DIST_DIR := dist
+CACHE_DIR := ../../_cache
 
 # This allows src to be nested withing sub-directories.
 rwildcard=$(wildcard $(1)$(2))$(foreach d,$(wildcard $1*), $(call rwildcard,$d/,$2))
@@ -23,43 +24,66 @@ PROGRAM_TGT := $(PROGRAM).$(CURRENT_TARGET)
 SOURCES := $(wildcard $(SRCDIR)/*.c)
 SOURCES += $(wildcard $(SRCDIR)/*$(ASMEXT))
 
-SOURCES += $(call rwildcard,$(SRCDIR)/common/,*.c)
+# allow for a src/common/ dir and recursive subdirs
 SOURCES += $(call rwildcard,$(SRCDIR)/common/,*$(ASMEXT))
-SOURCES += $(call rwildcard,$(SRCDIR)/$(CURRENT_TARGET)/,*$(ASMEXT))
-SOURCES += $(call rwildcard,$(SRCDIR)/$(CURRENT_TARGET)/,*.c)
+SOURCES += $(call rwildcard,$(SRCDIR)/common/,*.c)
+
+# allow src/<platform>/ and its recursive subdirs
+SOURCES_PF := $(call rwildcard,$(SRCDIR)/$(CURRENT_PLATFORM)/,*$(ASMEXT))
+SOURCES_PF += $(call rwildcard,$(SRCDIR)/$(CURRENT_PLATFORM)/,*.c)
+
+# allow src/current-target/<target>/ and its recursive subdirs
+SOURCES_TG := $(call rwildcard,$(SRCDIR)/current-target/$(CURRENT_TARGET)/,*$(ASMEXT))
+SOURCES_TG += $(call rwildcard,$(SRCDIR)/current-target/$(CURRENT_TARGET)/,*.c)
 
 # remove trailing and leading spaces.
 SOURCES := $(strip $(SOURCES))
+SOURCES_PF := $(strip $(SOURCES_PF))
+SOURCES_TG := $(strip $(SOURCES_TG))
 
-# convert from src/your/long/path/foo.[c|s] to obj/<target>/your/long/path/foo$(OBJEXT)
+# convert from src/your/long/path/foo.[c|s] to obj/<target>/your/long/path/foo.o
 # we need the target because compiling for previous target does not pick up potential macro changes
 OBJ1 := $(SOURCES:.c=$(OBJEXT))
 OBJECTS := $(OBJ1:$(ASMEXT)=$(OBJEXT))
 
 OBJECTS_ARC := $(OBJECTS)
-
 -include ../../makefiles/objects-$(CURRENT_TARGET).mk
 
 OBJECTS := $(OBJECTS:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
+
+OBJ2 := $(SOURCES_PF:.c=$(OBJEXT))
+OBJECTS_PF := $(OBJ2:$(ASMEXT)=$(OBJEXT))
+OBJECTS_PF := $(OBJECTS_PF:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
+
+OBJ3 := $(SOURCES_TG:.c=$(OBJEXT))
+OBJECTS_TG := $(OBJ3:$(ASMEXT)=$(OBJEXT))
+OBJECTS_TG := $(OBJECTS_TG:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
+
+OBJECTS += $(OBJECTS_PF)
+OBJECTS += $(OBJECTS_TG)
+
 OBJECTS_ARC := $(OBJECTS_ARC:$(SRCDIR)/%=$(OBJDIR)/$(CURRENT_TARGET)/%)
 
 # Ensure make recompiles parts it needs to if src files change
 DEPENDS := $(OBJECTS:$(OBJEXT)=.d)
 
 ASFLAGS += \
-	$(INCS_ARG) src/common \
-	$(INCS_ARG) src/$(CURRENT_TARGET) \
-	$(INCS_ARG) $(SRCDIR)
+  $(INCS_ARG) src/common \
+  $(INCS_ARG) src/$(CURRENT_PLATFORM) \
+  $(INCS_ARG) src/current-target/$(CURRENT_TARGET) \
+  $(INCS_ARG) $(SRCDIR)
 
 ifeq ($(CC),iix compile)
 CFLAGS += \
 	$(INCC_ARG)src/common \
-	$(INCC_ARG)src/$(CURRENT_TARGET) \
+	$(INCC_ARG)src/$(CURRENT_PLATFORM) \
+	$(INCC_ARG)src/current-target/$(CURRENT_TARGET) \
 	$(INCC_ARG)$(SRCDIR)
 else
 CFLAGS += \
 	$(INCC_ARG) src/common \
-	$(INCC_ARG) src/$(CURRENT_TARGET) \
+	$(INCC_ARG) src/$(CURRENT_PLATFORM) \
+	$(INCC_ARG) src/current-target/$(CURRENT_TARGET) \
 	$(INCC_ARG) $(SRCDIR)
 endif
 
@@ -97,7 +121,7 @@ vpath %$(ASMEXT) $(SRC_INC_DIRS)
 $(OBJDIR)/$(CURRENT_TARGET)/%$(OBJEXT): %.c $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 ifeq ($(CC),cl65)
-	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(CFLAGS) --listing $(@:.o=.lst) -o $@ $<
+	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:$(OBJEXT)=.d) $(CFLAGS) --listing $(@:$(OBJEXT)=.lst) -o $@ $<
 else ifeq ($(CC),iix compile)
 	$(CC) $(CFLAGS) $< keep=$(subst .root,,$@)
 else
@@ -108,7 +132,7 @@ endif
 $(OBJDIR)/$(CURRENT_TARGET)/%$(OBJEXT): %$(ASMEXT) $(VERSION_FILE) | $(OBJDIR)
 	@$(call MKDIR,$(dir $@))
 ifeq ($(CC),cl65)
-	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:.o=.d) $(CFLAGS) --listing $(@:.o=.lst) -o $@ $<
+	$(CC) -t $(CURRENT_TARGET) -c --create-dep $(@:$(OBJEXT)=.d) $(CFLAGS) --listing $(@:$(OBJEXT)=.lst) -o $@ $<
 else ifeq ($(CC),iix compile)
 	$(CC) $(CFLAGS) $< keep=$(subst .root,,$@)
 else
@@ -130,7 +154,7 @@ $(PROGRAM_TGT): $(BUILD_DIR)/$(PROGRAM_TGT) | $(BUILD_DIR)
 
 test: $(PROGRAM_TGT)
 	$(PREEMUCMD)
-	$(EMUCMD) $(BUILD_DIR)\\$<
+	$(EMUCMD) $(BUILD_DIR)/$<
 	$(POSTEMUCMD)
 
 # Use "./" in front of all dirs being removed as a simple safety guard to

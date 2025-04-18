@@ -7,7 +7,7 @@ void add_header(char *devicespec, char *header);
 char *create_url(char *method);
 void handle_err(char *reason);
 uint8_t set_http_channel_mode(char *devicespec, uint8_t mode);
-void set_json(char *devicespec);
+void add_json_headers(char *devicespec);
 void setup();
 
 void start_get();

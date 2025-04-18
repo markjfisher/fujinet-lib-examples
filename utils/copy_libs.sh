@@ -24,9 +24,9 @@ fi
 PLATFORMS=${PLATFORMS:-"c64 atari apple2 apple2enh"}
 VERSION=${FUJINET_LIB_VERSION:-$(grep '^FUJINET_LIB_VERSION :=' ${ROOT_DIR}/makefiles/fujinet-lib.mk | awk '{print $3}')}
 
-LIBS_DIR=_libs
+FN_CACHE=_cache/fujinet-lib
 
-mkdir ${ROOT_DIR}/${LIBS_DIR} > /dev/null 2>&1
+mkdir -p ${ROOT_DIR}/${FN_CACHE} > /dev/null 2>&1
 
 for platform in ${PLATFORMS}; do
   ZIP_FILE=${FUJI_LIB_DIR}/dist/fujinet-lib-${platform}-${VERSION}.zip
@@ -36,7 +36,7 @@ for platform in ${PLATFORMS}; do
     exit 1
   fi
 
-  cp ${ZIP_FILE} ${ROOT_DIR}/${LIBS_DIR}
-  rm -rf ${ROOT_DIR}/${LIBS_DIR}/${VERSION}-${platform}
-  unzip ${ZIP_FILE} -d ${ROOT_DIR}/${LIBS_DIR}/${VERSION}-${platform}
+  cp ${ZIP_FILE} ${ROOT_DIR}/${FN_CACHE}
+  rm -rf ${ROOT_DIR}/${FN_CACHE}/${VERSION}-${platform}
+  unzip ${ZIP_FILE} -d ${ROOT_DIR}/${FN_CACHE}/${VERSION}-${platform}
 done

@@ -1,4 +1,5 @@
 #include <conio.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -6,7 +7,7 @@
 
 #define BASE_ADDRESS 0xC000
 
-char *version = "v1.0.4";
+char *version = "v1.1.0";
 
 void debug() {}
 
@@ -15,6 +16,18 @@ int main(void) {
     printf("spinfo %s\n", version);
     sp_info();
     printf("\n");
+
+    printf("press a key to run sp_init_c");
+    cgetc();
+    sp_init_c();
+    printf("\n");
+
+    printf("press a key to run sp_init");
+    // reset init flag
+    sp_is_init = 0;
+    cgetc();
+    sp_init();
+
     return 0;
 }
 
@@ -67,4 +80,48 @@ void sp_info() {
       sp_print_devices();
     }
   }
+}
+
+uint8_t sp_init_c(void) {
+    const uint8_t sp_markers[] = {0x20, 0x00, 0x03, 0x00};
+    uint16_t base;
+    uint8_t i;
+    bool match;
+    uint8_t offset;
+    uint16_t dispatch_address;
+
+    // reset network id and is_init flag, we are going to rescan.
+    sp_network = 0;
+    sp_is_init = 0;
+
+    for (base = 0xC701; base >= 0xC101; base -= 0x0100) {
+        match = true;
+        for (i = 0; i < 4; i++) {
+            if (read_memory(i * 2, base) != sp_markers[i]) {
+                match = false;
+                break;
+            }
+        }
+
+        if (match) {
+            // If a match is found, calculate the dispatch function address
+            offset = read_memory(0xFE, base);
+            dispatch_address = base + offset + 2;
+            sp_dispatch_address[0] = dispatch_address & 0xFF;
+            sp_dispatch_address[1] = dispatch_address >> 8;
+
+            // now find and return the network id. it's stored in sp_network after calling sp_get_network_id.
+            // we need to set sp_is_init to 1 to stop sp_get_network_id from calling init again and recursing.
+            sp_is_init = 1;
+            sp_get_network_id();
+            if (sp_network != 0) {
+                return sp_network;
+            }
+            // it failed to find a network on this SP device, so reset sp_is_init and reloop/exit
+            sp_is_init = 0;
+        }
+    }
+
+    // no match is found, return 0 for network not found.
+    return 0;
 }
