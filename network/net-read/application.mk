@@ -2,8 +2,9 @@
 # REST_SERVER_ADDRESS
 ####################################
 # If REST_SERVER_ADDRESS is already set on command line, these do nothing, otherwise they will work out the local IP address, ignoring 172 range which is WSL on Windows.
+# Manual invoke: make REST_SERVER_ADDRESS=\\\"192.168.1.40\\\" TARGETS=atari release
 ifeq ($(detected_OS),Linux)
-  REST_SERVER_ADDRESS = \"$(shell ip -4 addr show scope global | grep -oP '(?<=inet\s)\d+(\.\d+){3}')\"
+  REST_SERVER_ADDRESS = \"$(shell ip -4 addr show scope global | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '^172\.' | uniq)\"
 else ifeq ($(detected_OS),$(filter $(detected_OS),MSYS MINGW Cygwin Windows))
   REST_SERVER_ADDRESS = \"$(shell ipconfig | grep -oP 'IPv4.*:\s*\K[\d.]+' | grep -v '^172\.')\"
 endif

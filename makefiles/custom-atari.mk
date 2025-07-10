@@ -43,12 +43,14 @@ ATARI_CACHE_DIR := $(CACHE_DIR)/atari
 
 ALTIRRA ?= $(ALTIRRA_BIN) \
   $(XS)/portable $(XS)/portablealt:altirra-debug.ini \
+  $(XS)/debug \
+  $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CURRENT_TARGET).lbl" \
 
+#   $(XS)/debugcmd: "bp _debug" \
+#   $(XS)/debugcmd: "bp _perform_status" \
+#   $(XS)/debugcmd: "bp _network_read_nb" \
 
 # Additional args that can be copied into the above lines
-#   $(XS)/debug \
-#   $(XS)/debugcmd: ".loadsym build\$(PROGRAM).$(CURRENT_TARGET).lbl" \
-#   $(XS)/debugcmd: "bp _debug" \
 #   $(XS)/debugcmd: "bp _clock_get_time" \
 #   $(XS)/debugcmd: "bp _clock_get_time_tz" \
 

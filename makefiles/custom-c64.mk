@@ -5,7 +5,7 @@
 
 SUFFIX = .prg
 DISK_TASKS += .create-d64
-VICE_HOME := $(dir $(shell which xvic))
+VICE_HOME := $(dir $(shell which xvic 2>/dev/null))
 
 DISK_FILE = $(DIST_DIR)/$(PROGRAM).d64
 

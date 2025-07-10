@@ -69,3 +69,32 @@ The configuration requirements can be found in each `custom-<platform>.mk` file 
 
 If your platform has an emulator that it can use, simply running `make test` should start it.
 Setting up fujinet-pc is beyond the scope of this readme.
+
+## copying files to webdav
+
+### rclone
+
+On linux, install `rclone` and configure a webdav config with:
+
+```shell
+$ rclone config create fujinet webdav url http://fujinet.home/dav vendor other
+```
+
+substitute your fujinet address in place of fujinet.home.
+
+Now you can copy files on the command line with something like:
+
+```shell
+$ rclone copyto dist/netread.atari.com fujinet:atari/netread.xex
+```
+
+This will copy the dist/netread.atari.com file and place it in the fujinet's "atari" dir, renamed to "netread.xex"
+
+Full compilation and copy for convenience:
+
+```shell
+make clean && \
+  make TARGETS=atari release && \
+  rclone deletefile fujinet:atari/netread.xex && \
+  rclone copyto dist/netread.atari.com fujinet:atari/netread.xex
+```

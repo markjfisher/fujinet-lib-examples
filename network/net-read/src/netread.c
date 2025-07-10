@@ -9,12 +9,17 @@ uint8_t buffer[1024];
 
 uint8_t err = 0;
 
-char *version = "1.1.9";
+char *version = "1.2.0";
 char *url;
 
 uint16_t nw_bw = 0;
 uint8_t nw_conn = 0;
 uint8_t nw_err = 0;
+
+extern bool network_read_trip;
+extern bool network_has_trip;
+
+extern bool network_read_interrupt_enabled;
 
 bool ask() {
   char sure = 0;
@@ -29,6 +34,7 @@ bool ask() {
 
 int main(void) {
   bool sure = false;
+  // network_read_interrupt_enabled = false;
 
   new_screen();
   setup();
@@ -43,53 +49,67 @@ int main(void) {
 
   // simple read of 27 bytes
   new_screen();
-  printf("Normal Read 27 bytes\n");
+  printf("Normal Read 27 bytes (trip: %d, has: %d)\n", network_read_trip, network_has_trip);
   do_alpha(27);
 
   // ask and take exactly 27 (chunks are 10 bytes every 100ms)
-  new_screen();
-  printf("Chunked 27/27 bytes\n"); 
-  do_chunked(27, 27);
+  // new_screen();
+  // printf("Chunked 27/27 bytes\n"); 
+  // do_chunked(27, 27);
 
   // ask for less than available, should be 10 in BW at end
-  new_screen();
-  printf("Chunked 27/17 bytes\n"); 
-  do_chunked(27, 17);
+  // new_screen();
+  // printf("Chunked 27/17 bytes\n"); 
+  // do_chunked(27, 17);
 
   // ask for more than available
-  new_screen();
-  printf("Chunked 27/500 bytes\n"); 
-  do_chunked(27, 500);
+  // new_screen();
+  // printf("Chunked 27/500 bytes\n"); 
+  // do_chunked(27, 500);
 
   // ask for lots, only read a few, BW will be 13 at the end (not sure why it's not 3)
-  new_screen();
-  printf("Chunked 550/27 bytes\n"); 
-  do_chunked(550, 27);
+  // new_screen();
+  // printf("Chunked 550/27 bytes\n"); 
+  // do_chunked(550, 27);
 
   // over 512
-  new_screen();
-  printf("Normal Read 521 bytes\n");
-  do_alpha(521);
+  // new_screen();
+  // printf("Normal Read 521 bytes\n");
+  // do_alpha(521);
 
   // over 512 chunked
-  new_screen();
-  printf("Chunked 521/521 bytes\n");
-  do_chunked(521, 521);
+  // new_screen();
+  // printf("Chunked 521/521 bytes\n");
+  // do_chunked(521, 521);
 
   // multiple reads in application
   new_screen();
   // 3 lots of A-A, B-B, C-C, then an extra D at the end.
-  printf("multi 82/27\n");
+  printf("multi 82/27 (trip: %d, has: %d)\n", network_read_trip, network_has_trip);
   do_multi(82, 27);
 
+  // chunked version, ask for all of data
   new_screen();
-  printf("read 500K\n");
-  sure = ask();
-  if (sure) {
-    // this takes about 2 minutes to fully display only printing 1st byte of each 1024 block. Takes 20 if you display every byte.
-    sprintf(abUrl, "n:http://%s:%s/alphabet/500000", REST_SERVER_ADDRESS, REST_SERVER_PORT);
-    do_long_first_only(abUrl);
-  }
+  // All of it but chunked by request into 10s
+  printf("chunk 82/82 (trip: %d, has: %d)\n", network_read_trip, network_has_trip);
+  do_chunked(82, 82);
+
+  // chunked version, ask for less than available
+  new_screen();
+  // just 1 read of 27 bytes, and leave the rest hanging. The data is returned in blocks of 10, so 30 bytes are sent (in 3x10 blocks)
+  // but as we only read 7 bytes of the final chunk there are 3 bytes remaining to be read
+  printf("chunk 82/27 (trip: %d, has: %d)\n", network_read_trip, network_has_trip);
+  do_chunked(82, 27);
+
+
+  // new_screen();
+  // printf("read 500K\n");
+  // sure = ask();
+  // if (sure) {
+  //   // this takes about 2 minutes to fully display only printing 1st byte of each 1024 block. Takes 20 if you display every byte.
+  //   sprintf(abUrl, "n:http://%s:%s/alphabet/500000", REST_SERVER_ADDRESS, REST_SERVER_PORT);
+  //   do_long_first_only(abUrl);
+  // }
 
   printf("\n");
   return 0;
@@ -123,10 +143,6 @@ void do_read(int num) {
 
   printf("Fetched %" PRIu16 " bytes, count: %" PRIu16 "\n", fn_bytes_read, count);
   hex_dump(buffer, fn_bytes_read);
-
-  // check network status
-  network_status(url, &nw_bw, &nw_conn, &nw_err);
-  printf("bw: %u, c: %d, err: %d\n", nw_bw, nw_conn, nw_err);
 }
 
 void do_open() {
@@ -148,6 +164,11 @@ void do_alpha(int num) {
   clear_buffer();
   url = createAbUrl(num);
   do_common(num);
+
+  printf("trip: %d, has: %d, ", network_read_trip, network_has_trip);
+  network_status(url, &nw_bw, &nw_conn, &nw_err);
+  printf("bw: %u, c: %d, err: %d\n", nw_bw, nw_conn, nw_err);
+
   do_close();
   cgetc();
 }
@@ -156,6 +177,11 @@ void do_chunked(int total, int size) {
   clear_buffer();
   url = createCabUrl(total);
   do_common(size);
+
+  printf("trip: %d, has: %d, ", network_read_trip, network_has_trip);
+  network_status(url, &nw_bw, &nw_conn, &nw_err);
+  printf("bw: %u, c: %d, err: %d\n", nw_bw, nw_conn, nw_err);
+
   do_close();
   cgetc();
 }
@@ -175,6 +201,10 @@ void do_multi(int total, int size) {
   if (remainder > 0) {
     do_read(remainder);
   }
+  
+  printf("trip: %d, has: %d ", network_read_trip, network_has_trip);
+  network_status(url, &nw_bw, &nw_conn, &nw_err);
+  printf("bw: %u, c: %d, err: %d\n", nw_bw, nw_conn, nw_err);
 
   do_close();
   cgetc();

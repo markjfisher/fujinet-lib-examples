@@ -51,7 +51,7 @@ BoxAnimation anim4;
 
 void print_debug()
 {
-  gotoxy(0, 10);
+  gotoxy(1, 10);
   cprintf("m: %2d  a1: %2d  a2: %2d  a3: %2d  a4: %2d", message_speed, anim1.modulus, anim2.modulus, anim3.modulus, anim4.modulus);
 }
 
@@ -60,6 +60,9 @@ int main(void)
   int max_frames = 0;
   uint8_t init_r = 0;
   uint8_t key_hit = 0;
+
+  // uncomment to disable interrupt handling of data
+  network_read_interrupt_enabled = false;
 
   clrscr();
   configure_animations();
@@ -74,7 +77,7 @@ int main(void)
   url = createQuotesUrl();
 
   draw_border();
-  cputsxy(0, 9, "keys: +/-, q/a, w/s, e/d, r/f, p, ESC");
+  cputsxy(1, 9, "keys: +/-, q/a, w/s, e/d, r/f, p, ESC");
 
   // loop until ESC hit
   while(last_key != 27) {
@@ -113,7 +116,7 @@ int main(void)
 
 
 char* createQuotesUrl() {
-  // This endpoint produces a single random quote, then the stream is closed, and the application opens a new one
+  // sprintf(quotesUrl, "n:http://%s:%s/quotes/simple/", REST_SERVER_ADDRESS, REST_SERVER_PORT);
   sprintf(quotesUrl, "n:http://%s:%s/quotes/random/", REST_SERVER_ADDRESS, REST_SERVER_PORT);
 
   return (char *)quotesUrl;
@@ -156,14 +159,18 @@ void show_messages(uint8_t modulus)
     return;
   }
 
-  // debug();
   if (!is_connected) {
     err = network_open(url, OPEN_MODE_HTTP_GET_H, OPEN_TRANS_NONE);
     handle_err("open");
+
+    fn_network_error = 0; // reset the error flag, without this the old status can linger if there's no data to read.
     is_connected = true;
   }
 
   n = network_read_nb(url, buffer, BYTES_TO_READ);
+
+  // gotoxy(0, 11);
+  // cprintf("bw: %2d  con: %2d  err: %2d      ", fn_network_bw, fn_network_conn, fn_network_error);
 
   // check if we hit EOF, i.e. no more data for this URL
   if (fn_network_error == 136) {
@@ -173,7 +180,9 @@ void show_messages(uint8_t modulus)
   }
 
   // check  if there was no data, this is when we requested more but there wasn't any available.
-  if (n == 0) return;
+  if (n == 0) {
+    return;
+  }
 
   // did we read the entire contents of available data? if not, the quote isn't finished.
   more_data = (fn_network_bw > 0);
@@ -182,7 +191,6 @@ void show_messages(uint8_t modulus)
   buffer[n] = 0;
 
   processBuffer((const char *) &buffer[0], more_data);
-
 }
 
 
